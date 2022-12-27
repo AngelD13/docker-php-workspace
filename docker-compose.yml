@@ -16,36 +16,39 @@ services:
       - ./nginx/logs:/var/log/nginx/
     depends_on:
       - php-7.1
-      - php-7.3
+      - php-7.4
       - mysql-8
       - mysql-5.7
-      - redis
-      - mongo
-      - postgres
+      #- redis
+      #- mongo
+      #- postgres
+      - phpmyadmin
     environment:
       TZ: ${WORKSPACE_TIMEZONE}
     networks:
       - backend
 
-  redis:
-    image: redis:latest
-    ports:
-      - "${REDIS_PORT}:6379"
-    container_name: redis
-    volumes:
-      - ./redis/data:/var/lib/redis
-      - ./redis/conf:/usr/local/etc/redis/redis.conf
-    environment:
-      TZ: ${WORKSPACE_TIMEZONE}
-    networks:
-      - backend
+  #redis:
+   # image: redis:latest
+    #ports:
+     # - "${REDIS_PORT}:6379"
+    #container_name: redis
+    #volumes:
+     # - ./redis/data:/var/lib/redis
+      #- ./redis/conf:/usr/local/etc/redis/redis.conf
+    #environment:
+     # TZ: ${WORKSPACE_TIMEZONE}
+    #networks:
+     # - backend
 
   mysql-5.7:
     image: mysql:5.7
     container_name: mysql-5.7
     restart: unless-stopped
+    command:
+      - "--ignore-db-dir=lost+found"
     volumes:
-      - ./mysql-5.7/data:/var/lib/mysql
+      - ./mysql-5.7/data:/var/lib/mysql5
       - ./mysql-5.7/conf.d:/etc/mysql/conf.d
       - ./mysql-5.7/logs:/var/log/mysql/
       - ./mysql-5.7/dump:/dump
@@ -66,7 +69,7 @@ services:
     container_name: mysql-8
     restart: unless-stopped
     volumes:
-      - ./mysql-8/data:/var/lib/mysql
+      - ./mysql-8/data:/var/lib/mysql8
       - ./mysql-8/conf.d:/etc/mysql/conf.d
       - ./mysql-8/logs:/var/log/mysql/
       - ./mysql-8/dump:/dump
@@ -81,35 +84,36 @@ services:
     networks:
       - backend
 
-  postgres:
-    image: postgres:alpine
-    volumes:
-      - ./postgres/data:/var/lib/postgresql/data
-      - ./postgres/dump:/dump
-    ports:
-      - "${POSTGRES_PORT}:5432"
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      TZ: ${WORKSPACE_TIMEZONE}
-    networks:
-        - backend
-    container_name: postgres
 
-  mongo:
-    image: mongo:4.2
-    ports:
-      - "${MONGO_PORT}:27017"
-    volumes:
-      - ./mongo/db:/data/db
-      - ./mongo/configdb:/data/configdb
-      - ./mongo/dump:/dump
-    environment:
-      TZ: ${WORKSPACE_TIMEZONE}
-    networks:
-      - backend
-    container_name: mongo
+  #postgres:
+   # image: postgres:alpine
+    #volumes:
+     # - ./postgres/data:/var/lib/postgresql/data
+      #- ./postgres/dump:/dump
+    #ports:
+     # - "${POSTGRES_PORT}:5432"
+    #environment:
+     # POSTGRES_DB: ${POSTGRES_DB}
+      #POSTGRES_USER: ${POSTGRES_USER}
+      #POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      #TZ: ${WORKSPACE_TIMEZONE}
+    #networks:
+     #   - backend
+    #container_name: postgres
+
+  #mongo:
+   # image: mongo:4.2
+    #ports:
+     # - "${MONGO_PORT}:27017"
+    #volumes:
+     # - ./mongo/db:/data/db
+      #- ./mongo/configdb:/data/configdb
+      #- ./mongo/dump:/dump
+    #environment:
+     # TZ: ${WORKSPACE_TIMEZONE}
+    #networks:
+     # - backend
+    #container_name: mongo
 
   php-8.0:
     build:
@@ -134,23 +138,23 @@ services:
       - 'project-2.localhost:192.168.65.2'
       - 'project-3.localhost:192.168.65.2'
 
-  php-7.3:
+  php-7.4:
     build:
       context: php-7-workspace
       dockerfile: Dockerfile
       args:
-        DOCKER_PHP_VERSION: '7.3'
+        DOCKER_PHP_VERSION: '7.4'
         DOCKER_PHP_ENABLE_XDEBUG: ${DOCKER_PHP_ENABLE_XDEBUG}
         TZ: ${WORKSPACE_TIMEZONE}
     working_dir: /var/www
-    container_name: php-7.3
+    container_name: php-7.4
     volumes:
       - ./.ssh:/home/www-data/.ssh
       - ./projects:/var/www
-      - ./php-ini/7.3/php.ini:/usr/local/etc/php/php.ini
-      - ./php-workers/7.3/supervisor.d:/etc/supervisor.d
+      - ./php-ini/7.4/php.ini:/usr/local/etc/php/php.ini
+      - ./php-workers/7.4/supervisor.d:/etc/supervisor.d
     ports:
-      - "${PHP_7_3_PORT}:9000"
+      - "${PHP_7_4_PORT}:9000"
     networks:
       - backend
     extra_hosts:
@@ -181,3 +185,18 @@ services:
       - 'project-1.localhost:192.168.65.2'
       - 'project-2.localhost:192.168.65.2'
       - 'project-3.localhost:192.168.65.2'
+
+  phpmyadmin:
+    depends_on:
+      - mysql-8
+      - mysql-5.7
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - '8080:80'
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: password 
+    networks:
+      - backend
+    container_name: phpmyadmin
