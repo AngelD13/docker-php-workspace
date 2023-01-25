@@ -17,6 +17,7 @@ services:
     depends_on:
       - php-7.1
       - php-7.4
+      - php-8.0
       - mysql-8
       - mysql-5.7
       #- redis
@@ -58,6 +59,8 @@ services:
       - seccomp:unconfined
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: ${WORKSPACE_TIMEZONE}
     networks:
@@ -79,6 +82,8 @@ services:
       - seccomp:unconfined
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: ${WORKSPACE_TIMEZONE}
     networks:
@@ -153,6 +158,11 @@ services:
       - ./projects:/var/www
       - ./php-ini/7.4/php.ini:/usr/local/etc/php/php.ini
       - ./php-workers/7.4/supervisor.d:/etc/supervisor.d
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
       - "${PHP_7_4_PORT}:9000"
     networks:
@@ -190,13 +200,22 @@ services:
     depends_on:
       - mysql-8
       - mysql-5.7
-    image: phpmyadmin/phpmyadmin
+    image: phpmyadmin:latest
     restart: always
     ports:
       - '8080:80'
     environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: password 
+      - PMA_ARBITRARY=1
+      - UPLOAD_LIMIT=1024M
+      - MEMORY_LIMIT=1024M
+      - MAX_EXECUTION_TIME=300
+      - PMA_HOST=mysql-8
+      - PMA_HOST=mysql-5.7
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     networks:
       - backend
     container_name: phpmyadmin
+    extra_hosts:
+      - 'project-1.localhost:192.168.65.2'
+      - 'project-2.localhost:192.168.65.2'
+      - 'project-3.localhost:192.168.65.2'
