@@ -1,18 +1,18 @@
 <?php
-class velobd {
+class Velobd {
 
     private $db;
 
     public function __construct() {
 
 		// Файл dbinfo.php возвращает массив для Подключения к БД
-		$dbinfo = require 'admin/config.php';
+		$dbinfo = require_once 'config.php';
 		
 		// Подключение с проверкой
         try {
             $this->db = new PDO('mysql:host='.$dbinfo['host'].';port='.$dbinfo['port'].';dbname='.$dbinfo['dbname'].'',
 			$dbinfo['login'], $dbinfo['password']);
-			echo "Connected successfully";
+			//echo "Connected successfully";
 			return $this->db;
         } catch (PDOException $e) {
             print "Error!: " . $e->getMessage() . "<br/>";
@@ -21,6 +21,7 @@ class velobd {
 		
 			
 	}
+
 
     // выборка таблицы из БД
 		public function query($sql, $params = [])
